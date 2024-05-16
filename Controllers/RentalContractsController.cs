@@ -3,6 +3,9 @@ using CarRental.API.Models.Domain;
 using CarRental.API.Models.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CarRental.API.Controllers
 {
@@ -70,6 +73,15 @@ namespace CarRental.API.Controllers
         [HttpPost]
         public IActionResult CreateRentalContract([FromBody] AddRentalContractDto addRentalContractDto)
         {
+            // error handling
+            var existingVehicle = dbContext.Vehicles.Find(addRentalContractDto.VehicleId);
+            var existingCustomer = dbContext.Customers.Find(addRentalContractDto.CustomerId);
+            
+            if (existingCustomer == null || existingVehicle == null)
+            {
+                return NotFound("Vehicle or customer with the provided ID does not exist.");
+            }
+
             // map dto to domain
             var rentalcontractDomain = new RentalContract
             {
@@ -97,6 +109,59 @@ namespace CarRental.API.Controllers
 
             // return response
             return CreatedAtAction(nameof(GetRentalContractById), new { id = rentalcontractDomain.id }, rentalcontractDto);
+        }
+
+        // delete rental contract
+        // DELETE: https://localhost:port/api/rentalcontracts
+        [HttpDelete]
+        [Route("{id:int}")]
+        public IActionResult DeleteRentalContract([FromRoute] int id)
+        {
+            var contractDomain = dbContext.RentalContracts.Find(id);
+
+            if (contractDomain == null)
+            {
+                return NotFound();
+            }
+
+            dbContext.RentalContracts.Remove(contractDomain);
+            dbContext.SaveChanges();
+
+            return Ok(contractDomain);
+        }
+
+        // update rental contract
+        // PUT: https://localhost:port/api/rentalcontracts/id
+        [HttpPut]
+        [Route("{id:int}")]
+        public IActionResult UpdateRentalContract([FromRoute] int id, UpdateRentalContractDto updateRentalContractDto)
+        {
+            var contractDomain = dbContext.RentalContracts.Find(id);
+
+            if (contractDomain == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                contractDomain.CustomerId = updateRentalContractDto.CustomerId;
+                contractDomain.Date = updateRentalContractDto.Date;
+                contractDomain.Mileage = updateRentalContractDto.Mileage;
+                contractDomain.Status = updateRentalContractDto.Status;
+                contractDomain.VehicleId = updateRentalContractDto.VehicleId;
+                dbContext.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                // check if the exception is due to a foreign key constraint violation
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
+                {
+                    return Conflict("Cannot update the customer because it is referenced by other records.");
+                }
+
+            }
+            return Ok(contractDomain);
         }
     }
 }

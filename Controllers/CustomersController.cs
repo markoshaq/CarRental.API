@@ -3,6 +3,8 @@ using CarRental.API.Models.Domain;
 using CarRental.API.Models.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.Numerics;
@@ -117,6 +119,83 @@ namespace CarRental.API.Controllers
 
             // return response
             return CreatedAtAction(nameof(GetCustomerById), new { id = customerDomain.Id }, customerDto);
+        }
+
+        // delete customers
+        // DELETE: https://localhost:port/api/customers
+/*        [HttpDelete]
+        public IActionResult DeleteCustomer()
+        {
+            try
+            {
+                dbContext.Customers.ExecuteDelete();
+                dbContext.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                // check if the exception is due to a foreign key constraint violation
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
+                {
+                    return Conflict("Cannot delete the customer because it is referenced by other records.");
+                }
+            }
+            return Ok("Deleted all rows.");
+        }*/
+
+        // delete customer
+        // DELETE: https://localhost:port/api/customers/id
+        [HttpDelete]
+        [Route("{id:int}")]
+        public IActionResult DeleteCustomer([FromRoute] int id)
+        {
+            var customerDomain = dbContext.Customers.Find(id);
+
+            if (customerDomain == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                dbContext.Customers.Remove(customerDomain);
+                dbContext.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                // check if the exception is due to a foreign key constraint violation
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
+                {
+                    return Conflict("Cannot delete the customer because it is referenced by other records.");
+                }
+            }
+            return Ok(customerDomain);
+        }
+
+        // update customer
+        // PUT: https://localhost:port/api/customers/id
+        [HttpPut]
+        [Route("{id:int}")]
+        public IActionResult UpdateCustomer([FromRoute] int id, UpdateCustomerDto updateCustomerDto)
+        {
+            var customerDomain = dbContext.Customers.Find(id);
+
+            if (customerDomain == null)
+            {
+                return NotFound();
+            }
+
+            customerDomain.FirstName = updateCustomerDto.FirstName;
+            customerDomain.LastName = updateCustomerDto.LastName;
+            customerDomain.Street = updateCustomerDto.Street;
+            customerDomain.City = updateCustomerDto.City;
+            customerDomain.Country = updateCustomerDto.Country;
+            customerDomain.Salutation = updateCustomerDto.Salutation;
+            customerDomain.EMail = updateCustomerDto.EMail;
+            customerDomain.Phone = updateCustomerDto.Phone;
+            customerDomain.ZipCode = updateCustomerDto.ZipCode;
+
+            dbContext.SaveChanges();
+            return Ok(customerDomain);
         }
     }
 }

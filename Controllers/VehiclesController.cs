@@ -3,6 +3,9 @@ using CarRental.API.Models.Domain;
 using CarRental.API.Models.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace CarRental.API.Controllers
 {
@@ -104,6 +107,61 @@ namespace CarRental.API.Controllers
 
             // return response
             return CreatedAtAction(nameof(GetVehicleById), new { id = vehicleDomain.id }, vehicleDto);
+        }
+
+        // delete vehicle
+        // DELETE: https://localhost:port/api/vehicles
+        [HttpDelete]
+        [Route("{id:int}")]
+        public IActionResult DeleteVehicle([FromRoute] int id)
+        {
+            var vehicleDomain = dbContext.Vehicles.Find(id);
+
+            if (vehicleDomain == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                dbContext.Vehicles.Remove(vehicleDomain);
+                dbContext.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                // check if the exception is due to a foreign key constraint violation
+                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
+                {
+                    return Conflict("Cannot delete the customer because it is referenced by other records.");
+                }
+            }
+
+            return Ok(vehicleDomain);
+        }
+
+        // update vehicle
+        // PUT: https://localhost:port/api/vehicles/id
+        [HttpPut]
+        [Route("{id:int}")]
+        public IActionResult UpdateVehicle([FromRoute] int id, UpdateVehicleDto updateVehicleDto)
+        {
+            var vehicleDomain = dbContext.Vehicles.Find(id);
+
+            if (vehicleDomain == null)
+            {
+                return NotFound();
+            }
+
+            vehicleDomain.Brand = updateVehicleDto.Brand;
+            vehicleDomain.Class = updateVehicleDto.Class;
+            vehicleDomain.FirstRegistration = updateVehicleDto.FirstRegistration;
+            vehicleDomain.LicensePlate = updateVehicleDto.LicensePlate;
+            vehicleDomain.Mileage = updateVehicleDto.Mileage;
+            vehicleDomain.RentPrice = updateVehicleDto.RentPrice;
+            vehicleDomain.TirePressure = updateVehicleDto.TirePressure;
+
+            dbContext.SaveChanges();
+            return Ok(vehicleDomain);
         }
     }
 }
