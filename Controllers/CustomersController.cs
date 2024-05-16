@@ -1,6 +1,7 @@
 ﻿using CarRental.API.Data;
 using CarRental.API.Models.Domain;
 using CarRental.API.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
