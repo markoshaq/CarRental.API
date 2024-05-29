@@ -13,6 +13,7 @@ using System.Reflection.Emit;
 
 namespace CarRental.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomersController : ControllerBase
