@@ -19,14 +19,13 @@ namespace CarRental.API.Controllers
             this.dbContext = dbContext;
         }
 
+        // get all rental contracts
         // GET:https://localhost:port/api/rentalcontracts
         [HttpGet]
         public IActionResult GetRentalContracts()
         {
-            // get domain model from db
             var rentalcontractsDomain = dbContext.RentalContracts.ToList();
 
-            // create and return dto
             var rentalcontractsDto = new List<RentalContractDto>();
             foreach (var contract in rentalcontractsDomain)
             {
@@ -43,6 +42,7 @@ namespace CarRental.API.Controllers
             return Ok(rentalcontractsDto);
         }
 
+        // get rental contract by id
         // GET:https://localhost:port/api/rentalcontracts/{id}
         [HttpGet]
         [Route("{id:int}")]
@@ -68,12 +68,11 @@ namespace CarRental.API.Controllers
             return Ok(rentalcontractsDto);
         }
 
-        // create new rental contract
+        // create rental contract
         // POST: https://localhost:port/api/rentalcontracts
         [HttpPost]
         public IActionResult CreateRentalContract([FromBody] AddRentalContractDto addRentalContractDto)
         {
-            // error handling
             var existingVehicle = dbContext.Vehicles.Find(addRentalContractDto.VehicleId);
             var existingCustomer = dbContext.Customers.Find(addRentalContractDto.CustomerId);
             
@@ -82,7 +81,6 @@ namespace CarRental.API.Controllers
                 return NotFound("Vehicle or customer with the provided ID does not exist.");
             }
 
-            // map dto to domain
             var rentalcontractDomain = new RentalContract
             {
                 CustomerId = addRentalContractDto.CustomerId,
@@ -92,11 +90,9 @@ namespace CarRental.API.Controllers
                 VehicleId = addRentalContractDto.VehicleId,
             };
 
-            // save to db
             dbContext.RentalContracts.Add(rentalcontractDomain);
             dbContext.SaveChanges();
 
-            // response body
             var rentalcontractDto = new RentalContractDto
             {
                 id = rentalcontractDomain.id,
@@ -107,7 +103,6 @@ namespace CarRental.API.Controllers
                 VehicleId = rentalcontractDomain.VehicleId
             };
 
-            // return response
             return CreatedAtAction(nameof(GetRentalContractById), new { id = rentalcontractDomain.id }, rentalcontractDto);
         }
 

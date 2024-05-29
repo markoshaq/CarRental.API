@@ -19,13 +19,13 @@ namespace CarRental.API.Controllers
                 this.dbContext = dbContext;
         }
 
+        // get all vehicles
         // GET:https://localhost:port/api/vehicles
         [HttpGet]
         public IActionResult GetVehicles()
         {
             var vehiclesDomain = dbContext.Vehicles.ToList();
 
-            // create and return dto
             var vehiclesDto = new List<VehicleDto>();
             foreach (var vehicle in vehiclesDomain)
             {
@@ -44,6 +44,7 @@ namespace CarRental.API.Controllers
             return Ok(vehiclesDto);
         }
 
+        // get vehicle by id
         // GET:https://localhost:port/api/vehicles/{id}
         [HttpGet]
         [Route("{id:int}")]
@@ -71,12 +72,11 @@ namespace CarRental.API.Controllers
             return Ok(vehiclesDto);
         }
 
-        // create new vehicle
+        // create vehicle
         // POST: https://localhost:port/api/vehicles
         [HttpPost]
         public IActionResult CreateVehicle([FromBody] AddVehicleDto addVehicleDto)
         {
-            // map dto to domain
             var vehicleDomain = new Vehicle
             {
                 Brand = addVehicleDto.Brand,
@@ -88,11 +88,9 @@ namespace CarRental.API.Controllers
                 TirePressure = addVehicleDto.TirePressure
             };
 
-            // save to db
             dbContext.Vehicles.Add(vehicleDomain);
             dbContext.SaveChanges();
 
-            // response body
             var vehicleDto = new VehicleDto
             {
                 id = vehicleDomain.id,
@@ -105,12 +103,11 @@ namespace CarRental.API.Controllers
                 TirePressure = vehicleDomain.TirePressure
             };
 
-            // return response
             return CreatedAtAction(nameof(GetVehicleById), new { id = vehicleDomain.id }, vehicleDto);
         }
 
-        // delete vehicle
-        // DELETE: https://localhost:port/api/vehicles
+        // delete vehicle by id 
+        // DELETE: https://localhost:port/api/vehicles/id
         [HttpDelete]
         [Route("{id:int}")]
         public IActionResult DeleteVehicle([FromRoute] int id)
@@ -129,7 +126,6 @@ namespace CarRental.API.Controllers
             }
             catch (DbUpdateException ex)
             {
-                // check if the exception is due to a foreign key constraint violation
                 if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
                 {
                     return Conflict("Cannot delete the customer because it is referenced by other records.");
@@ -139,7 +135,7 @@ namespace CarRental.API.Controllers
             return Ok(vehicleDomain);
         }
 
-        // update vehicle
+        // update vehicle by id
         // PUT: https://localhost:port/api/vehicles/id
         [HttpPut]
         [Route("{id:int}")]

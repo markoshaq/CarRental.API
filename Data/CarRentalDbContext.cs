@@ -7,7 +7,6 @@ namespace CarRental.API.Data
     {
         public CarRentalDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
         {
-            
         }
 
         public DbSet<Customer> Customers { get; set; }

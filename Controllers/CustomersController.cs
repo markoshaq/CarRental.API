@@ -23,14 +23,13 @@ namespace CarRental.API.Controllers
             this.dbContext = dbContext;
         }
 
+        // get all customers
         // GET:https://localhost:port/api/customers
         [HttpGet]
         public IActionResult GetCustomers()
         {
-            // get domain model from db
             var customers = dbContext.Customers.ToList();
 
-            // create and return dto
             var customersDto = new List<CustomerDto>();
             foreach (var customer in customers)
             {
@@ -51,6 +50,7 @@ namespace CarRental.API.Controllers
             return Ok(customersDto);
         }
 
+        // get customer by id
         // GET:https://localhost:port/api/customers/{id}
         [HttpGet]
         [Route("{id:int}")]
@@ -80,12 +80,11 @@ namespace CarRental.API.Controllers
             return Ok(customersDto);
         }
 
-        // create new customer
+        // create customer
         // POST: https://localhost:port/api/customers
         [HttpPost]
         public IActionResult CreateCustomer([FromBody] AddCustomerDto addCustomerDto)
         {
-            // map dto to domain
             var customerDomain = new Customer
             {
                 Salutation = addCustomerDto.Salutation,
@@ -99,11 +98,9 @@ namespace CarRental.API.Controllers
                 EMail = addCustomerDto.EMail
             };
 
-            // save to db
             dbContext.Customers.Add(customerDomain);
             dbContext.SaveChanges();
 
-            // response body
             var customerDto = new CustomerDto
             {
                 Id = customerDomain.Id,
@@ -118,32 +115,10 @@ namespace CarRental.API.Controllers
                 EMail = customerDomain.EMail
             };
 
-            // return response
             return CreatedAtAction(nameof(GetCustomerById), new { id = customerDomain.Id }, customerDto);
         }
 
-        // delete customers
-        // DELETE: https://localhost:port/api/customers
-/*        [HttpDelete]
-        public IActionResult DeleteCustomer()
-        {
-            try
-            {
-                dbContext.Customers.ExecuteDelete();
-                dbContext.SaveChanges();
-            }
-            catch (DbUpdateException ex)
-            {
-                // check if the exception is due to a foreign key constraint violation
-                if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
-                {
-                    return Conflict("Cannot delete the customer because it is referenced by other records.");
-                }
-            }
-            return Ok("Deleted all rows.");
-        }*/
-
-        // delete customer
+        // delete customer by id
         // DELETE: https://localhost:port/api/customers/id
         [HttpDelete]
         [Route("{id:int}")]
@@ -163,7 +138,6 @@ namespace CarRental.API.Controllers
             }
             catch (DbUpdateException ex)
             {
-                // check if the exception is due to a foreign key constraint violation
                 if (ex.InnerException is SqlException sqlEx && sqlEx.Number == 547)
                 {
                     return Conflict("Cannot delete the customer because it is referenced by other records.");
@@ -172,7 +146,7 @@ namespace CarRental.API.Controllers
             return Ok(customerDomain);
         }
 
-        // update customer
+        // update customer by id
         // PUT: https://localhost:port/api/customers/id
         [HttpPut]
         [Route("{id:int}")]
